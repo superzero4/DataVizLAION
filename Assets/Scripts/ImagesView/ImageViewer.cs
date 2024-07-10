@@ -10,11 +10,24 @@ using UnityEngine.UIElements;
 
 public class ImageViewer : MonoBehaviour
 {
+    public enum Mode { HSV, RGB, RBG, BGR ,Size}
+    public enum AltMode { None, Size, Saturation, Color }
+    [SerializeField] private Mode _mode;
+    public void SetMode(Mode mode)
+    {
+        _mode = mode;
+    }
+    [SerializeField] private AltMode _depthMode;
+    [SerializeField] private AltMode _scaleMode;
+    public void SetDepthMode(AltMode mode)
+    {
+        _scaleMode = mode;
+    }
     [SerializeField] private Transform _parent;
     [SerializeField] ImagesInfo _images;
     [SerializeField] ImagePanel _panelPrefab;
     [SerializeField] private List<ImagePanel> _panels;
-
+    [SerializeField] private Camera _mainCamera;
     public void Awake()
     {
         FullRoutine();
@@ -47,6 +60,7 @@ public class ImageViewer : MonoBehaviour
             for (int i = _panels.Count; i < count; i++)
             {
                 ImagePanel panel = Instantiate(_panelPrefab, _parent);
+                panel.SetCamera(_mainCamera);
                 _panels.Add(panel);
             }
         }
@@ -68,13 +82,106 @@ public class ImageViewer : MonoBehaviour
     {
         var color = info.averageHSV;
         position = new Vector3(color.h, color.v, 0);
-        position = FromSpherical(radius, color.h, color.v);
-        scale = Vector3.one * (info.averageHSV.s+.5f);
+        CalculatePosition(info, out float inclination, out float azimuth);
+        position = FromSpherical(CalculateRadius(info,radius), inclination, azimuth);
+        scale = CalculateScale(info);
         //We are centered on 0 so facing direction is position vector actually
         forward = position.normalized;
         Debug.Log($"{info} => Position: {position}, Scale: {scale}, Forward: {forward}");
         
     }
+
+    private Vector3 CalculateScale(ImageInfo info)
+    {
+        Vector3 scale = Vector3.one;
+        float mult = 1f;
+        switch (_scaleMode)
+        {
+            case AltMode.None:
+                break;
+            case AltMode.Color
+        }
+        return mult*scale;
+    }
+
+    private void CalculatePosition(ImageInfo image,out float inclination, out float azimuth)
+    {
+        inclination = image.averageHSV.h;
+        azimuth = image.averageHSV.v;
+        switch (_mode)
+        {
+            case Mode.HSV:
+                inclination = image.averageHSV.h;
+                azimuth = image.averageHSV.v;
+                break;
+            case Mode.RGB:
+                inclination = image.averageColor.r;
+                azimuth = image.averageColor.g;
+                break;
+            case Mode.RBG:
+                inclination = image.averageColor.r;
+                azimuth = image.averageColor.b;
+                break;
+            case Mode.BGR:
+                inclination = image.averageColor.b;
+                azimuth = image.averageColor.g;
+                break;
+            case Mode.Size:
+                inclination = image.Width*1f/maxW;
+                azimuth = image.Height*1f/maxH;
+                break;
+            default: Debug.LogError($"Mode {_mode} not handled yet.");
+                break;
+            
+        }
+    }
+
+    public const int maxH = 1080;
+    public const int maxW = 1920;
+    private float CalculateRadius(ImageInfo info,float baseRadius)
+    {
+        float rad = 1;
+        switch (_scaleMode)
+        {
+            case AltMode.None:
+                break;
+            case AltMode.Size:
+                rad = (info.Width * info.Height)*1f / (maxW*maxH);
+                break;
+            case AltMode.Saturation:
+                rad = info.averageHSV.s + .5f;
+                break;
+            case AltMode.Color:
+                float m = 1f;
+                m = GetThirdComponent(info);
+                rad = ((m / 2f) + .5f);
+                break;
+        }
+        return rad*baseRadius;
+    }
+
+    private float GetThirdComponent(ImageInfo info)
+    {
+        float m;
+        switch(_mode)
+        {
+            case Mode.RGB:
+                m = info.averageColor.b;
+                break;
+            case Mode.RBG:
+                m = info.averageColor.g;
+                break;
+            case Mode.BGR:
+                m = info.averageColor.r;
+                break;
+            default:
+                m = (info.averageColor.r + info.averageColor.g + info.averageColor.b) / 3;
+                break;
+        }
+
+        return m;
+    }
+
     public Vector3 FromSpherical(float r, float relativeInclinaison, float relativeAzimuth)
     {
         var theta=relativeInclinaison*Mathf.PI;

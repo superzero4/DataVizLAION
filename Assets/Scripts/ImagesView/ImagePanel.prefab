@@ -53,6 +53,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _image: {fileID: 1056899995201755929}
+  _canvas: {fileID: 7806028165212548162}
 --- !u!223 &7806028165212548162
 Canvas:
   m_ObjectHideFlags: 0
