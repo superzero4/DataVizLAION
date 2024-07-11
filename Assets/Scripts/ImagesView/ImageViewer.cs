@@ -10,28 +10,44 @@ using UnityEngine.UIElements;
 
 public class ImageViewer : MonoBehaviour
 {
-    public enum Mode { HSV, RGB, RBG, BGR ,Size}
+    public enum Mode { HSV, RGB, Size, RBG, BGR}
     public enum AltMode { None, Size, Saturation, Color }
-    [SerializeField] private Mode _mode;
+    [SerializeField] public Mode _mode;
     public void SetMode(Mode mode)
     {
         _mode = mode;
+        PlaceImages();
     }
-    [SerializeField] private AltMode _depthMode;
-    [SerializeField] private AltMode _scaleMode;
+    public void SetMode(int mode)
+    {
+        SetMode((Mode) mode);
+    }
+    [SerializeField] public AltMode _depthMode;
+    public void SetDepthMode(int mode)
+    {
+        SetDepthMode((AltMode) mode);
+    }
     public void SetDepthMode(AltMode mode)
     {
+        _depthMode = mode;
+        PlaceImages();
+    }
+
+    [SerializeField] public AltMode _scaleMode;
+    public void SetScaleMode(AltMode mode)
+    {
         _scaleMode = mode;
+        PlaceImages();
+    }
+    public void SetScaleMode(int mode)
+    {
+        SetScaleMode((AltMode) mode);
     }
     [SerializeField] private Transform _parent;
     [SerializeField] ImagesInfo _images;
     [SerializeField] ImagePanel _panelPrefab;
     [SerializeField] private List<ImagePanel> _panels;
     [SerializeField] private Camera _mainCamera;
-    public void Awake()
-    {
-        FullRoutine();
-    }
     [Button,InfoBox("Will make same operations as entering playmode basically doing everything needed",InfoMessageType.Info)]
     public void FullRoutine(int max =-1,float radius=25)
     {
@@ -87,7 +103,7 @@ public class ImageViewer : MonoBehaviour
         scale = CalculateScale(info);
         //We are centered on 0 so facing direction is position vector actually
         forward = position.normalized;
-        Debug.Log($"{info} => Position: {position}, Scale: {scale}, Forward: {forward}");
+        //Debug.Log($"{info} => Position: {position}, Scale: {scale}, Forward: {forward}");
         
     }
 
@@ -99,7 +115,13 @@ public class ImageViewer : MonoBehaviour
         {
             case AltMode.None:
                 break;
-            case AltMode.Color
+            case AltMode.Color: mult = GetThirdComponent(info);
+                break;
+            case AltMode.Saturation: mult = info.averageHSV.s;
+                break;
+            case AltMode.Size:
+                mult = (info.Width * info.Height)*1f/(maxW*maxH);
+                break;
         }
         return mult*scale;
     }
@@ -141,7 +163,7 @@ public class ImageViewer : MonoBehaviour
     private float CalculateRadius(ImageInfo info,float baseRadius)
     {
         float rad = 1;
-        switch (_scaleMode)
+        switch (_depthMode)
         {
             case AltMode.None:
                 break;
@@ -152,9 +174,7 @@ public class ImageViewer : MonoBehaviour
                 rad = info.averageHSV.s + .5f;
                 break;
             case AltMode.Color:
-                float m = 1f;
-                m = GetThirdComponent(info);
-                rad = ((m / 2f) + .5f);
+                rad = (GetThirdComponent(info) / 2f) + .5f;
                 break;
         }
         return rad*baseRadius;
