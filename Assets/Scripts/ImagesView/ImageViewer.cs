@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
+#if UNITY_EDITOR
 using Sirenix.Utilities;
+#endif
 using Structures;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -72,19 +74,22 @@ public class ImageViewer : MonoBehaviour
     [SerializeField] ImagePanel _panelPrefab;
     [SerializeField] private List<ImagePanel> _panels;
     [SerializeField] private Camera _mainCamera;
-
+#if UNITY_EDITOR
     [Button,
      InfoBox("Will make same operations as entering playmode basically doing everything needed", InfoMessageType.Info)]
+#endif
     public void FullRoutine(int max = -1, float radius = 25)
     {
         SetImages(max);
         PlaceImages(radius);
     }
-
+#if UNITY_EDITOR
     [Button]
+#endif
     void ClearPanels() => InstantiatePanels(0);
-
+#if UNITY_EDITOR
     [Button]
+#endif
     public void InstantiatePanels(int count = 90)
     {
         if (_panels.Count > count)
@@ -96,7 +101,8 @@ public class ImageViewer : MonoBehaviour
                 DestroyImmediate(_panels[i].gameObject);
             }
 
-            _panels.SetLength(count);
+            _panels.RemoveRange(begin, end - begin);
+            //_panels.SetLength(count);
         }
         else
         {
@@ -107,8 +113,9 @@ public class ImageViewer : MonoBehaviour
             }
         }
     }
-
+#if UNITY_EDITOR
     [Button]
+#endif
     public void PlaceImages(float radius = 25)
     {
         for (int im = 0; im < Mathf.Min(_images.images.Length, _panels.Count); im++)
@@ -136,7 +143,12 @@ public class ImageViewer : MonoBehaviour
 
     private Vector3 CalculateScale(ImageInfo info)
     {
-        Vector3 scale = Vector3.one;
+        //We normalize all images by default before applygin a mult (which can actually take zie)
+        Vector3 scale = new Vector3((maxW * 1f) / (info.Width), (maxH * 1f / info.Height), 1);
+        if (info.Width == 0)
+            scale.x = 1;
+        if (info.Height == 0)
+            scale.y = 1;
         float mult = 1f;
         switch (_scaleMode)
         {
@@ -244,8 +256,9 @@ public class ImageViewer : MonoBehaviour
             r * Mathf.Cos(theta)
         );
     }
-
+#if UNITY_EDITOR
     [Button]
+#endif
     public void SetImages(int max = -1)
     {
         InstantiatePanels(max < 0 ? _images.images.Length : Mathf.Min(max, _images.images.Length));
@@ -253,7 +266,7 @@ public class ImageViewer : MonoBehaviour
         {
             for (int im = 0; im < Mathf.Min(_images.images.Length, _panels.Count); im++)
             {
-                _panels[im].SetImage(_images.images[im].sprite);
+                _panels[im].SetImage(_images.images[im].sprite, im);
             }
         }
     }
