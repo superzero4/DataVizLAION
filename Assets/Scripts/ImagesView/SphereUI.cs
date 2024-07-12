@@ -20,9 +20,9 @@ public class SphereUI : MonoBehaviour
     {
         if ((Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.Q)) && Input.GetKey(KeyCode.LeftControl))
         {
-            _modeDropdown.gameObject.SetActive(false);
-            _scaleDropdown.gameObject.SetActive(false);
-            _depthDropdown.gameObject.SetActive(false);
+            _modeDropdown.gameObject.SetActive(!_modeDropdown.gameObject.activeSelf);
+            _scaleDropdown.gameObject.SetActive(!_scaleDropdown.gameObject.activeSelf);
+            _depthDropdown.gameObject.SetActive(!_depthDropdown.gameObject.activeSelf);
         }
     }
 
