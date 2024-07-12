@@ -273,6 +273,6 @@ public class ImageViewer : MonoBehaviour
 
     public string InfoText()
     {
-        return $"Mapping of {_mode} with "+(_depthMode==AltMode.None ? "constant distance from center" : (_depthMode.ToString() + " as value for distance from center")) +  (_scaleMode==AltMode.None ? " " : (" and image scale based on their"+_scaleMode.ToString()));
+        return $"Mapping of {_mode} with "+(_depthMode==AltMode.None ? "constant distance from center" : (_depthMode.ToString() + " as value for distance from center")) +  (_scaleMode==AltMode.None ? " " : (" and image scale based on their "+_scaleMode.ToString()));
     }
 }
